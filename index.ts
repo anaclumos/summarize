@@ -1,9 +1,10 @@
 import { OpenAI } from 'langchain/llms/openai'
 import { loadSummarizationChain } from 'langchain/chains'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
+import fs from 'fs'
 
 const model = new OpenAI({ modelName: 'gpt-3.5-turbo-16k' })
-const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 })
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 16000 })
 
 const summarize = async (text: string) => {
   const docs = await textSplitter.createDocuments([text])
@@ -14,23 +15,11 @@ const summarize = async (text: string) => {
   return res?.text
 }
 
-const askUserForInput = async () => {
-  const readline = require('readline').createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  })
-  return new Promise<string>((resolve, reject) => {
-    readline.question('Enter text to summarize: ', (text: string) => {
-      readline.close()
-      resolve(text)
-    })
-  })
-}
-
 const main = async () => {
-  const text = await askUserForInput()
+  const text = await fs.promises.readFile('./input.txt', 'utf-8')
   const summary = await summarize(text)
   console.log(summary)
+  fs.writeFileSync('./output.txt', summary)
 }
 
 main()
